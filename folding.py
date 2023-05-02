@@ -80,7 +80,7 @@ w = 22.86                           # width of bridge in [m] (75 ft)
 d = .3048                           # depth of bridge in [m] (12 in)
 rho_c = 2500                        # density of concrete in [kg/m^3] (156.07 lb/ft^3)
 g = chrono.ChVectorD(0,-9.81,0)     # gravitational acceleration in [N]
-vol = l/2*w*d                         # total volume of reinforced concrete in [m^3]
+vol = l/3*w*d                         # total volume of reinforced concrete in [m^3]
 mass = vol*rho_c                    # total mass of reinforced concrete in [kg]
 weight_num = mass*g.Length()        # total weight of reinforced concrete in [N]
 num_bridges = 5                     # number of bridges being tested
@@ -169,7 +169,7 @@ system.Add(joint3)
 vis = chronoirr.ChVisualSystemIrrlicht()
 vis.AttachSystem(system)
 vis.SetWindowSize(1024,768)
-vis.SetWindowTitle('static bridge')
+vis.SetWindowTitle('folding bridge')
 vis.Initialize()
 vis.AddSkyBox()
 vis.AddCamera(chrono.ChVectorD(-200, 0, 3))
@@ -228,5 +228,5 @@ ax3.plot(array_time,array_3z)
 ax3.set(ylabel='Force [N]',xlabel='Time [s]')
 ax3.grid()
 
-plt.savefig('static results.png')
+plt.savefig('folding bridge results.png')
 plt.show()
