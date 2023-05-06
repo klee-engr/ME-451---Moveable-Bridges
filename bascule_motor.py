@@ -86,7 +86,7 @@ weight_num = mass*g.Length()        # total weight of reinforced concrete in [N]
 num_bridges = 5                     # number of bridges being tested
 sim_time = 10                       # length of simulation [s]
 time_step = 2e-3                    # time step of simulation [s]
-time_end = 5                            # start time of simulation [s]
+time_end = 15                            # start time of simulation [s]
 omg = math.pi/(2*time_end)
 
 mat = chrono.ChMaterialSurfaceNSC() # ground material
@@ -97,20 +97,21 @@ system.Set_G_acc(g)
 z2x = chrono.Q_from_AngY(0)
 
 # Create ground body
-table_thickness = 0.2
-table_pos_y = 0
-table = chrono.ChBodyEasyBox(1.2*l, 1, num_bridges*(w+10), 1000, True, True, mat)
-system.AddBody(table)
-table.SetIdentifier(0)
-table.SetBodyFixed(True)
-table.SetName("table")
-table.SetPos(chrono.ChVectorD(0, table_pos_y, 0))
-table.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
+ground_thickness = 0.2
+ground_pos_y = 0
+ground = chrono.ChBodyEasyBox(1.2*l, 1, num_bridges*(w+10), 1000, True, True, mat)
+system.AddBody(ground)
+ground.SetIdentifier(0)
+ground.SetBodyFixed(True)
+ground.SetName("table")
+ground.SetPos(chrono.ChVectorD(0, ground_pos_y, 0))
+ground.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/water1.jpg"))
 
 # Creates first pylon using ChBodyEasyBox
 py1 = chrono.ChBodyEasyBox(1,10,w,1000,True,True, mat)
 py1.SetPos(chrono.ChVectorD(-l/2,5.5,5))
 #py1.SetMass(mass)
+py1.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
 py1.SetIdentifier(1)
 py1.SetBodyFixed(True)
 py1.SetCollide(True)
@@ -119,6 +120,7 @@ system.Add(py1)
 # Creates second pylon using ChBodyEasyBox
 py2 = chrono.ChBodyEasyBox(1,10,w,1000,True,True, mat)
 #py2.SetMass(mass)
+py2.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
 py2.SetIdentifier(2)
 py2.SetPos(chrono.ChVectorD(l/2,5.5,5))
 py2.SetBodyFixed(True)
@@ -128,6 +130,7 @@ system.Add(py2)
 # Creates static bridge deck
 deck1 = chrono.ChBodyEasyBox(l/2,d,w,1000,True,True, mat)
 deck1.SetMass(mass)
+deck1.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
 deck1.SetIdentifier(3)
 deck1.SetPos(chrono.ChVectorD(-l/4,10+((d)/2),5))
 deck1.SetBodyFixed(False)
@@ -136,21 +139,38 @@ system.Add(deck1)
 
 deck2 = chrono.ChBodyEasyBox(l/2,d,w,1000,True,True, mat)
 deck2.SetMass(mass)
+deck2.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
 deck2.SetIdentifier(4)
 deck2.SetPos(chrono.ChVectorD(l/4,10+((d)/2),5))
 deck2.SetBodyFixed(False)
 deck2.SetCollide(True)
 system.Add(deck2)
 
-motor1 = chrono.ChLinkMotorRotationAngle()
-motor1.Initialize(py1, deck1, chrono.ChFrameD(chrono.ChVectorD(-l/2, 10, 5), z2x))
-motor1.SetAngleFunction(chrono.ChFunction_Ramp(0, -omg))
-system.AddLink(motor1)
+#####################################################################################
+### MOTORS AND JOINTS (COMMENT OUT THE SECTION THAT WILL NOT BE USED FOR ANALYSIS)###
+#####################################################################################
 
-motor2 = chrono.ChLinkMotorRotationAngle()
-motor2.Initialize(py2, deck2, chrono.ChFrameD(chrono.ChVectorD(l/2, 10, 5), z2x))
-motor2.SetAngleFunction(chrono.ChFunction_Ramp(0, omg))
-system.AddLink(motor2)
+### SECTION FOR STATIC ANALYSIS (JOINTS) ###
+joint1 = chrono.ChLinkLockRevolute()
+joint1.Initialize(py1, deck1, chrono.ChCoordsysD())
+system.AddLink(joint1)
+
+joint2 = chrono.ChLinkLockRevolute()
+joint2.Initialize(py2, deck1, chrono.ChCoordsysD())
+system.AddLink(joint2)
+
+### SECTION FOR DYNAMIC ANALYSIS (MOTORS) ###
+# motor1 = chrono.ChLinkMotorRotationAngle()
+# motor1.Initialize(py1, deck1, chrono.ChFrameD(chrono.ChVectorD(-l/2, 10, 5), z2x))
+# motor1.SetAngleFunction(chrono.ChFunction_Ramp(0, -omg))
+# system.AddLink(motor1)
+
+# motor2 = chrono.ChLinkMotorRotationAngle()
+# motor2.Initialize(py2, deck2, chrono.ChFrameD(chrono.ChVectorD(l/2, 10, 5), z2x))
+# motor2.SetAngleFunction(chrono.ChFunction_Ramp(0, omg))
+# system.AddLink(motor2)
+
+
 
 # Creates visualization
 vis = chronoirr.ChVisualSystemIrrlicht()
@@ -175,40 +195,55 @@ array_2y = []
 array_2z = []
 array_2t = []
 
+array_joint1 = []
+array_joint1_avg = []
+array_joint2 = []
+array_joint2_avg = []
+
 while (vis.Run() and system.GetChTime() < time_end):
     
     array_time.append(system.GetChTime())
-    array_1x.append(motor1.Get_react_force().x)
-    array_1y.append(motor1.Get_react_force().y)
-    array_1z.append(motor1.Get_react_force().z)
-    array_1t.append(motor1.GetMotorTorque())
-    array_2x.append(motor2.Get_react_force().x)
-    array_2y.append(motor2.Get_react_force().y)
-    array_2z.append(motor2.Get_react_force().z)
-    array_2t.append(motor2.GetMotorTorque())
+    # array_1x.append(motor1.Get_react_force().x)
+    # array_1y.append(motor1.Get_react_force().y)
+    # array_1z.append(motor1.Get_react_force().z)
+    # array_1t.append(motor1.GetMotorTorque())
+    # array_2x.append(motor2.Get_react_force().x)
+    # array_2y.append(motor2.Get_react_force().y)
+    # array_2z.append(motor2.Get_react_force().z)
+    # array_2t.append(motor2.GetMotorTorque())
+    
+    array_joint1.append(joint1.Get_react_torque().z)
+    array_joint1_avg.append(np.mean(array_joint1))
+    
+    array_joint2.append(joint2.Get_react_torque().z)
+    array_joint2_avg.append(np.mean(array_joint2))
+    
+    array_joint1
     vis.BeginScene() 
     vis.Render()
     vis.EndScene()
     system.DoStepDynamics(time_step)
 
-fig, (ax1, ax2, ax3) = plt.subplots(3, sharex = True)
+fig, (ax1, ax2) = plt.subplots(2, sharex = True)
 
-ax1.plot(array_time,array_1x)
-ax1.plot(array_time,array_1y)
-ax1.plot(array_time,array_1z)
-ax1.set(ylabel='Force [N]')
+ax1.plot(array_time,array_joint1_avg)
+# ax1.plot(array_time,array_1y)
+# ax1.plot(array_time,array_1z)
+ax1.set(ylabel='joint1')
 ax1.grid()
 
-ax2.plot(array_time,array_2x)
-ax2.plot(array_time,array_2y)
-ax2.plot(array_time,array_2z)
-ax2.set(ylabel='Force [N]')
+ax2.plot(array_time,array_joint2_avg)
+# ax2.plot(array_time,array_2y)
+# ax2.plot(array_time,array_2z)
+ax2.set(ylabel='joint2')
 ax2.grid()
 
-ax3.plot(array_time,array_1t)
-ax3.plot(array_time,array_2t)
-ax3.set(ylabel='Motor Torque [Nm]',xlabel='Time [s]')
-ax3.grid()
+# ax3.plot(array_time,array_1t)
+# ax3.plot(array_time,array_2t)
+# ax3.set(ylabel='Motor Torque [Nm]',xlabel='Time [s]')
+# ax3.grid()
 
 plt.savefig('bascule bridge motorized results.png')
+plt.xlim(0.2, 4.95)
+# plt.ylim(-2000,2000)
 plt.show()
