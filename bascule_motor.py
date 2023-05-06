@@ -126,6 +126,10 @@ def Rect_inertia(b,h):                                          # Function to de
 # In this model, of a 2-decked bascule design, there are 2 bridge decks of
 # equal length (250 feet/76.2 m). Each deck is connected either by a joint or a
 # motor to the adjacent pylon. 
+#
+# The only significant flaw with this model currently is that one of the decks
+# rotates under gravity when the joints are enabled instead of staying 
+# horizontal.
 ###############################################################################
 
 #------------------------------------------------------------------------------
