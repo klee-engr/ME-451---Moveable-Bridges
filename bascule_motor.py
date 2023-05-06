@@ -126,10 +126,6 @@ def Rect_inertia(b,h):                                          # Function to de
 # In this model, of a 2-decked bascule design, there are 2 bridge decks of
 # equal length (250 feet/76.2 m). Each deck is connected either by a joint or a
 # motor to the adjacent pylon. 
-#
-# The only significant flaw with this model currently is that one of the decks
-# rotates under gravity when the joints are enabled instead of staying 
-# horizontal.
 ###############################################################################
 
 #------------------------------------------------------------------------------
@@ -242,17 +238,17 @@ system.Add(deck2)
 
 #||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-# mj = "pseudo-static"
+mj = "pseudo-static"
 
-# # Creates first revolute joint between <py1> and <deck1> at -76.2 m/-250 feet and adds <jm1> to the system
-# jm1 = chrono.ChLinkLockRevolute()
-# jm1.Initialize(py1, deck1, chrono.ChCoordsysD())
-# system.AddLink(jm1)
+# Creates first revolute joint between <py1> and <deck1> at -76.2 m/-250 feet and adds <jm1> to the system
+jm1 = chrono.ChLinkLockRevolute()
+jm1.Initialize(py1, deck1, chrono.ChCoordsysD(chrono.ChVectorD(-l/2, 10, 5), z2x))
+system.AddLink(jm1)
 
-# # Creates second revolute joint between <py2> and <deck2> at 76.2 m/250 feet and adds <jm2> to the system
-# jm2 = chrono.ChLinkLockRevolute()
-# jm2.Initialize(py2, deck1, chrono.ChCoordsysD())
-# system.AddLink(jm2)
+# Creates second revolute joint between <py2> and <deck2> at 76.2 m/250 feet and adds <jm2> to the system
+jm2 = chrono.ChLinkLockRevolute()
+jm2.Initialize(py2, deck2, chrono.ChCoordsysD(chrono.ChVectorD(l/2, 10, 5), z2x))
+system.AddLink(jm2)
 
 #||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
@@ -267,19 +263,19 @@ system.Add(deck2)
 
 #||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
-mj = "kinematic"
+# mj = "kinematic"
 
-# Creates first motor driving <py1> and <deck1> at -76.2 m/-250 feet with a ramped rotational velocity of -'omg' and adds <jm1> to the system
-jm1 = chrono.ChLinkMotorRotationAngle()
-jm1.Initialize(py1, deck1, chrono.ChFrameD(chrono.ChVectorD(-l/2, 10, 5), z2x))
-jm1.SetAngleFunction(chrono.ChFunction_Ramp(0, -omg))
-system.AddLink(jm1)
+# # Creates first motor driving <py1> and <deck1> at -76.2 m/-250 feet with a ramped rotational velocity of -'omg' and adds <jm1> to the system
+# jm1 = chrono.ChLinkMotorRotationAngle()
+# jm1.Initialize(py1, deck1, chrono.ChFrameD(chrono.ChVectorD(-l/2, 10, 5), z2x))
+# jm1.SetAngleFunction(chrono.ChFunction_Ramp(0, -omg))
+# system.AddLink(jm1)
 
-# Creates second motor driving <py2> and <deck2> at 76.2 m/250 feet with a ramped rotational velocity of 'omg' and adds <jm2> to the system
-jm2 = chrono.ChLinkMotorRotationAngle()
-jm2.Initialize(py2, deck2, chrono.ChFrameD(chrono.ChVectorD(l/2, 10, 5), z2x))
-jm2.SetAngleFunction(chrono.ChFunction_Ramp(0, omg))
-system.AddLink(jm2)
+# # Creates second motor driving <py2> and <deck2> at 76.2 m/250 feet with a ramped rotational velocity of 'omg' and adds <jm2> to the system
+# jm2 = chrono.ChLinkMotorRotationAngle()
+# jm2.Initialize(py2, deck2, chrono.ChFrameD(chrono.ChVectorD(l/2, 10, 5), z2x))
+# jm2.SetAngleFunction(chrono.ChFunction_Ramp(0, omg))
+# system.AddLink(jm2)
 
 #||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
