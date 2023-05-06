@@ -313,11 +313,6 @@ array_2y = []                           # Array for Y reaction force at joint2/m
 array_2z = []                           # Array for Z reaction force at joint2/motor2
 array_2t = []                           # Array for reaction torque at joint2/motor2
 
-# array_joint1 = []
-# array_joint1_avg = []
-# array_joint2 = []
-# array_joint2_avg = []
-
 #------------------------------------------------------------------------------
 ######################## Simulation of bridge model ###########################
 #------------------------------------------------------------------------------
@@ -340,13 +335,6 @@ while (vis.Run() and system.GetChTime() < time_end):
     array_2z.append(jm2.Get_react_force().z)
     array_2t.append(jm2.Get_react_torque().z)
     
-    # array_joint1.append(jm1.Get_react_torque().z)
-    # array_joint1_avg.append(np.mean(array_joint1))
-    
-    # array_joint2.append(joint2.Get_react_torque().z)
-    # array_joint2_avg.append(np.mean(array_joint2))
-    
-    # array_joint1
     vis.BeginScene() 
     vis.Render()
     vis.EndScene()
