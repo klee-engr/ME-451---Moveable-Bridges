@@ -15,6 +15,9 @@
 # Use <> to reference an object in the code, i.e. <py1> is the first pylon 
 #   created
 #
+# Use | | to reference a class in the code, i.e. |pylon| is a reference to the
+#   pylon class.
+#
 # Use [] to denote the primary units of a value, i.e. [m] is for meters
 #
 # Use () to denote the secondary units of a value, i.e. (ft) is for feet
@@ -26,7 +29,7 @@
 #
 # We used a common template to build our models. If we were to continue this 
 # project long term, many of the common features between our models like the 
-# {inertia} function and /Pylon/ class would be in a library that we could
+# {inertia} function and |Pylon| class would be in a library that we could
 # call. Since our project is small, we decided to keep a consistent template 
 # instead of making such a library.
 ###############################################################################
