@@ -1,24 +1,62 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 29 08:10:56 2023
-@author: Quinn
-"""
+###############################################################################
+#################### General notes on code organization #######################
+###############################################################################
+#
+# Commenting conventions:
+# 
+# Use {} to reference a function, i.e. {Rect_inertia} is referring to the 
+#   Rect_inertia function
+#
+# Use '' to reference a variable, i.e. 'mass' is referring to the mass variable
+#
+# Use "" to reference a value of a variable, i.e. if 'mass' is "23", the value
+#   of 'mass' is the number "23"
+#
+# Use <> to reference an object in the code, i.e. <py1> is the first pylon 
+#   created
+#
+# Use | | to reference a class in the code, i.e. |pylon| is a reference to the
+#   pylon class.
+#
+# Use [] to denote the primary units of a value, i.e. [m] is for meters
+#
+# Use () to denote the secondary units of a value, i.e. (ft) is for feet
+#
+# Use / / for checkboxes for notes on future work/to-do lists. Once 
+#   functionality has been checked, notes can be deleted.
+#
+# 
+#
+# We used a common template to build our models. If we were to continue this 
+# project long term, many of the common features between our models like the 
+# {inertia} function and |Pylon| class would be in a library that we could
+# call. Since our project is small, we decided to keep a consistent template 
+# instead of making such a library.
+###############################################################################
 
-# import os
+#------------------------------------------------------------------------------
+################## Required packages for running our code #####################
+#------------------------------------------------------------------------------
+
 import math
 import numpy as np
 import pychrono as chrono
 import matplotlib.pyplot as plt
 import pychrono.irrlicht as chronoirr
-   
+
+#------------------------------------------------------------------------------
+########################### Classes and functions #############################
+#------------------------------------------------------------------------------
    
 ###############################################################################
 # I'm trying to make a class to automate the creation of pylons (the vertical 
-# supports that hold the bridge deck). This isn't working at the moment. Not
-# sure if it is worth working on at the moment.
+# supports that hold the bridge deck). This isn't working at the moment. 
+#
+# / / Get to function correctly
+#
+# / / Add a class to make sections of the deck
 ###############################################################################
 
-# Helper class to make pylons
 # class Pylon:
 #     def __init__(self,x,y):
 #         self.x_loc = x
@@ -35,94 +73,133 @@ import pychrono.irrlicht as chronoirr
 # "Rect_inerita" as a possiblity. Requires a string "shape", then a double for 
 # the number of sections the deck is broken up into, then the axis of interest 
 # (x = 1, y = 2, z = 3), and finally the three dimensions. 
-
-# Current issues/plans (4/29/23 - QJK):
-#    
-# [ ]Should update the functions to have input validation on number of segments
-# to ensure integers-only. We don't want 2.4 sections.
+#
+# THIS CODE IS CURRENTLY NOT USED IN MODELS.
+#
+# This code functions as described, but proved to be unneeded in our models.
+# In the future, we would need the various moments of inertia of different
+# geometries, but we only thought we needed to compute rectangular sections.
+# After further developing our models, we realized we didn't need to compute
+# the moments of inertia so we aren't utilizing this function, but future work 
+# would involve expanding this function to include multiple geometries that are
+# commonly used in bridge construction like circular cross sections, I-beams, 
+# and hollow shapes as well.
+# 
+# TO DO:
+#
+# / / Expand arguements for 'inertia' to allow for variable number of input
+#     dimensions. Will need a different number of paramters based on geometry.
+#
+# / / Add more formulas for common areas: Circ_inertia, Ibeam_inertia, 
+#     HollowRect_inertia, etc...
 ###############################################################################
+
 def inertia(shape,segments,axis,length,width,depth):
-    if shape == "rect":
-        if axis == 1:
+    if shape == "rect":                                         # Tests 'shape' variable to confirm correct formula is used
+        if axis == 1:                                           # Calls {Rect_inertia} and uses correct variables for X moment of inertia
             I = Rect_inertia(length/segments,width)
-        elif axis == 2:
+        elif axis == 2:                                         # Calls {Rect_inertia} and uses correct variables for Y moment of inertia
             I = Rect_inertia(depth,length/segments)
-        elif axis == 3:
+        elif axis == 3:                                         # Calls {Rect_inertia} and uses correct variables for Z moment of inertia
             I = Rect_inertia(width,length/depth)
-        else:
+        else:                                                   # If 'axis' is not "1", "2", or "3" print a warning to console and return a value of "1"
             print("!!!Incorrect AXIS input!!!")
             I = 1
-    else:
+    else:                                                       # If the 'shape' string is not recognized, print a warning to console and reture a value of "1"
         print("!!!Incorrect SHAPE input!!!")
+        I = 1
     return I
    
-def Rect_inertia(b,h):
+def Rect_inertia(b,h):                                          # Function to determine and return the area moment of inertia of a rectangular area to {inertia} function
     I = (1/12)*b*h**3
     return I
 
+
+###############################################################################
+############################ MAIN CODE FOR MODEL ##############################
+###############################################################################
+
 ###############################################################################
 # Main body of code. Starts with basic parameters, then moves into the ground
-# body, and finally the bridges. So far, only the first pylon is being rendered
-# and I'm not sure why. Also, there is an error or something because the 
-# visualization will kill itself prior to finishing the full simulation. I'm 
-# not sure how long it is actually rendering, and I am not sure how to find 
-# out. See Apr29.png for execution dialog. No errors are brought up.
-
-# Current issues/plans (4/29/23 - QJK)
-
-# [ ] Work on creating visuals for second pylon and static deck.
-# [ ] Solve render-kill issue.
+# body, the bridge deck(s), and finally the joints/motors. Our models consist 
+# of two pylons, set at 500 feet/152.4 m apart symmetrically about the origin 
+# along the x-axis of the simulation. The pylons are all 5 m tall, and the
+# bridge deck(s) are also elevated to 5 m above the z-plane.
+#
+# In this model, of a single decked standard design, there is 1 bridge deck for
+# the entire 500 foot span connected to the pylons by revolute joints.
+#
+# The only significant flaw with this model currently is that one of the decks
+# rotates under gravity when the joints are enabled instead of staying 
+# horizontal.
 ###############################################################################
 
-# Bridge dimensions and parameters
-l = 152.4                           # length of bridge in [m] (500 ft)
-w = 22.86                           # width of bridge in [m] (75 ft)
-d = .3048                           # depth of bridge in [m] (12 in)
-rho_c = 2500                        # density of concrete in [kg/m^3] (156.07 lb/ft^3)
-g = chrono.ChVectorD(0,-9.81,0)     # gravitational acceleration in [N]
-vol = l*w*d                         # total volume of reinforced concrete in [m^3]
-mass = vol*rho_c                    # total mass of reinforced concrete in [kg]
-weight_num = mass*g.Length()        # total weight of reinforced concrete in [N]
-num_bridges = 5                     # number of bridges being tested
-sim_time = 10                       # length of simulation [s]
-time_step = 2e-3                    # time step of simulation [s]
-time = 0                            # start time of simulation [s]
+#------------------------------------------------------------------------------
+##################### Bridge dimensions and parameters ########################
+#------------------------------------------------------------------------------
 
-mat = chrono.ChMaterialSurfaceNSC() # ground material
-# Chreate Chrono system
-system = chrono.ChSystemNSC()
-system.Set_G_acc(g)
+# Gravity Vector
+g = chrono.ChVectorD(0,-9.81,0)         # gravitational acceleration in [m/s^2]
 
-# Create ground body
-table_thickness = 0.2
-table_pos_y = 0
-table = chrono.ChBodyEasyBox(1.2*l, 1, num_bridges*(w+10), 1000, True, True, mat)
-system.AddBody(table)
-table.SetIdentifier(0)
-table.SetBodyFixed(True)
-table.SetName("table")
-table.SetPos(chrono.ChVectorD(0, table_pos_y, 0))
-table.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
+# Geometric Parameters
+l = 152.4                               # length of bridge in [m] (500 ft)
+w = 22.86                               # width of bridge in [m] (75 ft)
+d = .3048                               # depth of bridge in [m] (12 in)
 
-# Creates first pylon using ChBodyEasyBox
+# Material Properties
+rho_c = 2500                            # density of concrete in [kg/m^3] (156.07 lb/ft^3)
+mat = chrono.ChMaterialSurfaceNSC()     # ground material contact system
+
+# Weight and Mass Calculations
+vol = l*w*d                           # total volume of reinforced concrete in [m^3]
+mass = vol*rho_c                        # total mass of reinforced concrete in [kg]
+weight_num = mass*g.Length()            # total weight of reinforced concrete in [N]
+
+# Simulation Parameters
+time_step = 2e-3                        # time step of simulation [s]
+time_end = 15                           # start time of simulation [s]
+omg = math.pi/(2*time_end)              # rotational velocity of motors [rad/s]
+
+#------------------------------------------------------------------------------
+########################### Static Bridge Model ###############################
+#------------------------------------------------------------------------------
+
+# Create Chrono system with NSC contact
+system = chrono.ChSystemNSC()           
+system.Set_G_acc(g)                     
+z2x = chrono.Q_from_AngY(0)             
+
+# Create ground body, textures it as water, and adds it to system
+ground_thickness = 0.2
+ground_pos_y = 0
+ground = chrono.ChBodyEasyBox(1.2*l, 1, 5*(w+10), 1000, True, True, mat)
+system.AddBody(ground)
+ground.SetIdentifier(0)
+ground.SetBodyFixed(True)
+ground.SetName("table")
+ground.SetPos(chrono.ChVectorD(0, ground_pos_y, 0))
+ground.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/water1.jpg"))
+
+# Creates first pylon using ChBodyEasyBox centered at -76.2 m/-250 feet, textures it as concrete, and adds <py1> to the system
 py1 = chrono.ChBodyEasyBox(1,10,w,1000,True,True, mat)
 py1.SetPos(chrono.ChVectorD(-l/2,5.5,5))
-#py1.SetMass(mass)
+py1.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
 py1.SetIdentifier(1)
 py1.SetBodyFixed(True)
 py1.SetCollide(True)
 system.Add(py1)
 
-# Creates second pylon using ChBodyEasyBox
+# Creates second pylon using ChBodyEasyBox centered at 76.2 m/250 feet, textures it as concrete, and adds <py2> to the system
 py2 = chrono.ChBodyEasyBox(1,10,w,1000,True,True, mat)
-#py2.SetMass(mass)
+py2.GetVisualShape(0).SetTexture(chrono.GetChronoDataFile("textures/concrete.jpg"))
 py2.SetIdentifier(2)
 py2.SetPos(chrono.ChVectorD(l/2,5.5,5))
 py2.SetBodyFixed(True)
 py2.SetCollide(True)
 system.Add(py2)
 
-# Creates static bridge deck
+# Creates first bridge deck using ChBodyEasyBox centered at -38.1 m/-125 feet, textures it as concrete, and adds <deck1> to the system
+
 deck1 = chrono.ChBodyEasyBox(l,d,w,1000,True,True, mat)
 deck1.SetMass(mass)
 deck1.SetIdentifier(3)
@@ -131,26 +208,24 @@ deck1.SetBodyFixed(False)
 deck1.SetCollide(True)
 system.Add(deck1)
 
-csys = chrono.ChBodyEasyBox(10,20,30,1000,True,True,mat)
-csys.SetIdentifier(4)
-csys.SetPos(chrono.ChVectorD(0,30,30))
-csys.SetBodyFixed(True)
-csys.SetCollide(True)
-system.Add(csys)
+#------------------------------------------------------------------------------
+########################### Joints of the model ###############################
+#------------------------------------------------------------------------------
 
-joint1 = chrono.ChLinkLockRevolute()
-joint1.Initialize(py1,
-                   deck1, 
-                   chrono.ChCoordsysD(chrono.ChVectorD(-l/2, 10, 5)))
-system.Add(joint1)
+# Creates first revolute joint between <py1> and <deck1> at -76.2 m/-250 feet and adds <jm1> to the system
+jm1 = chrono.ChLinkLockRevolute()
+jm1.Initialize(py1, deck1, chrono.ChCoordsysD(chrono.ChVectorD(-l/2, 10, 5), z2x))
+system.AddLink(jm1)
 
-joint2 = chrono.ChLinkLockRevolute()
-joint2.Initialize(py2,
-                   deck1, 
-                   chrono.ChCoordsysD(chrono.ChVectorD(l/2, 10, 5)))
-system.Add(joint2)
+# Creates second revolute joint between <py2> and <deck2> at 76.2 m/250 feet and adds <jm2> to the system
+jm2 = chrono.ChLinkLockRevolute()
+jm2.Initialize(py2, deck1, chrono.ChCoordsysD(chrono.ChVectorD(l/2, 10, 5), z2x))
+system.AddLink(jm2)
 
-# Creates visualization
+#------------------------------------------------------------------------------
+#################### Irrlicht visualization of simulation #####################
+#------------------------------------------------------------------------------
+
 vis = chronoirr.ChVisualSystemIrrlicht()
 vis.AttachSystem(system)
 vis.SetWindowSize(1024,768)
@@ -160,46 +235,87 @@ vis.AddSkyBox()
 vis.AddCamera(chrono.ChVectorD(-200, 0, 3))
 vis.AddTypicalLights()
 
-time_end = 5
+#------------------------------------------------------------------------------
+########################## Arrays for data storage ############################
+#------------------------------------------------------------------------------
 
-# Simulation
+array_time = []                         # Array for time
+array_1x = []                           # Array for X reaction force at joint1/motor1
+array_1y = []                           # Array for Y reaction force at joint1/motor1
+array_1z = []                           # Array for Z reaction force at joint1/motor1
+array_1t = []                           # Array for reaction torque at joint1/motor1
+array_2x = []                           # Array for X reaction force at joint2/motor2
+array_2y = []                           # Array for Y reaction force at joint2/motor2
+array_2z = []                           # Array for Z reaction force at joint2/motor2
+array_2t = []                           # Array for reaction torque at joint2/motor2
 
-array_time = []
-array_posx = []
-array_posy = []
-array_posz = []
-array_negx = []
-array_negy = []
-array_negz = []
+#------------------------------------------------------------------------------
+######################## Simulation of bridge model ###########################
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# This section runs the simulation on our system for a length of 'time_end' and
+# a time step of 'time_step'. We collect the reaction forces and torques from
+# each motor/joint in arrays intialized above.
+#------------------------------------------------------------------------------
 
 while (vis.Run() and system.GetChTime() < time_end):
     
     array_time.append(system.GetChTime())
-    array_posx.append(joint2.Get_react_force().x)
-    array_posy.append(joint2.Get_react_force().y)
-    array_posz.append(joint2.Get_react_force().z)
-    array_negx.append(joint1.Get_react_force().x)
-    array_negy.append(joint1.Get_react_force().y)
-    array_negz.append(joint1.Get_react_force().z)
+    array_1x.append(jm1.Get_react_force().x)
+    array_1y.append(jm1.Get_react_force().y)
+    array_1z.append(jm1.Get_react_force().z)
+    array_1t.append(jm1.Get_react_torque().z)
+    array_2x.append(jm2.Get_react_force().x)
+    array_2y.append(jm2.Get_react_force().y)
+    array_2z.append(jm2.Get_react_force().z)
+    array_2t.append(jm2.Get_react_torque().z)
 
     vis.BeginScene() 
     vis.Render()
     vis.EndScene()
     system.DoStepDynamics(time_step)
 
-fig, (ax1, ax2) = plt.subplots(2, sharex = True)
+#------------------------------------------------------------------------------
+######################## Calculations and plotting ############################
+#------------------------------------------------------------------------------
 
-ax1.plot(array_time,array_posx)
-ax1.plot(array_time,array_posy)
-ax1.plot(array_time,array_posz)
-ax1.set(ylabel='Force [N]',xlabel='Time [s]')
+#------------------------------------------------------------------------------
+# This section computes the average reaction forces and torques at each
+# joint/motor, prints them to console, and plots the time history data as well.
+# Saves the plots to the local folder from which the script is ran.
+#------------------------------------------------------------------------------
+ave1 = np.sqrt(np.mean(array_1x)**2 + np.mean(array_1y)**2 + np.mean(array_1z)**2)
+print("Average reaction at jm1: ",ave1)
+
+print("Average reaction torque at jm1:",np.mean(array_1t))
+
+ave2 = np.sqrt(np.mean(array_2x)**2 + np.mean(array_2y)**2 + np.mean(array_2z)**2)
+print("Average reaction at jm2: ",ave2)
+
+print("Average reaction torque at jm2:",np.mean(array_2t))
+
+fig, (ax1, ax2, ax3) = plt.subplots(3, sharex = True)
+
+# ax1.plot(array_time,array_joint1_avg)
+ax1.plot(array_time,array_1x)
+ax1.plot(array_time,array_1y)
+ax1.plot(array_time,array_1z)
+ax1.set(ylabel='Reaction Force [N]')
 ax1.grid()
 
-ax2.plot(array_time,array_negx)
-ax2.plot(array_time,array_negy)
-ax2.plot(array_time,array_negz)
-ax2.set(ylabel='Force [N]',xlabel='Time [s]')
+# ax2.plot(array_time,array_joint2_avg)
+ax2.plot(array_time,array_2x)
+ax2.plot(array_time,array_2y)
+ax2.plot(array_time,array_2z)
+ax2.set(ylabel='Reaction Force [N]')
 ax2.grid()
 
-plt.savefig('static results.png')
+ax3.plot(array_time,array_1t)
+ax3.plot(array_time,array_2t)
+ax3.set(ylabel='Reaction Torque [Nm]',xlabel='Time [s]')
+ax3.grid()
+
+plt.savefig('static bridge.png')
+plt.xlim(0.2, 4.95)
 plt.show()
